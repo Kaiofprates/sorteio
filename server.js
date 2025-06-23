@@ -133,6 +133,12 @@ app.post('/api/encerrar-rodada', (req, res) => {
     rodada: estadoVotacao.rodadaAtual
   };
   
+  // Emitir evento de grupo vencedor para remover botão imediatamente
+  io.emit('grupoVencedor', {
+    vencedor: vencedor,
+    votos: maxVotos
+  });
+  
   // Verificar se ainda há grupos para votar
   const restantes = estadoVotacao.grupos.filter(g => !estadoVotacao.apresentados.includes(g));
   

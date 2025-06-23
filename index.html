@@ -265,6 +265,21 @@
       border-color: #ffcc00;
     }
 
+    .botao-grupo:disabled {
+      background: linear-gradient(135deg, #4CAF50 0%, #45a049 100%) !important;
+      border-color: #4CAF50 !important;
+      cursor: not-allowed !important;
+      transform: none !important;
+      box-shadow: 2px 2px 6px #000 !important;
+      opacity: 0.9;
+    }
+
+    .botao-grupo:disabled:hover {
+      background: linear-gradient(135deg, #4CAF50 0%, #45a049 100%) !important;
+      border-color: #4CAF50 !important;
+      transform: none !important;
+    }
+
     .instrucao-votacao {
       font-size: 20px;
       color: #ffcc00;
@@ -296,6 +311,17 @@
       background-color: rgba(255, 204, 0, 0.1);
       border-radius: 12px;
       border: 2px solid #ffcc00;
+    }
+
+    .usuario-ja-votou {
+      font-size: 18px;
+      color: #4CAF50;
+      text-align: center;
+      margin: 15px 0;
+      padding: 10px;
+      background-color: rgba(76, 175, 80, 0.2);
+      border-radius: 8px;
+      border: 1px solid #4CAF50;
     }
   </style>
 </head>
@@ -366,6 +392,7 @@
   let estadoAtual = null;
   let ultimoVencedor = null;
   let empateAtivo = false;
+  let usuarioJaVotou = false;
 
   // Funções de música
   function tocarMusicaAtual() {
@@ -386,7 +413,7 @@
   }
 
   // Funções de votação
-  async function registrarVoto(grupo) {
+  async function registrarVoto(grupo, botao) {
     try {
       const response = await fetch('/api/votar', {
         method: 'POST',
@@ -402,6 +429,15 @@
         if (audioClick) {
           audioClick.currentTime = 0;
           audioClick.play();
+        }
+        
+        // Desabilitar o botão após o voto
+        if (botao) {
+          botao.disabled = true;
+          botao.textContent = `${grupo} ✓`;
+          botao.style.background = 'linear-gradient(135deg, #4CAF50 0%, #45a049 100%)';
+          botao.style.cursor = 'not-allowed';
+          usuarioJaVotou = true;
         }
         
         Toastify({
@@ -502,8 +538,26 @@
     empateSection.classList.remove('ativo');
   }
 
+  function limparBotoesGruposApresentados() {
+    const botoesContainer = document.querySelector('.botoes-votacao');
+    if (botoesContainer) {
+      const botoes = botoesContainer.querySelectorAll('.botao-grupo');
+      botoes.forEach(botao => {
+        const grupoBotao = botao.textContent.replace(' ✓', ''); // Remove o check se houver
+        if (estadoAtual && estadoAtual.apresentados.includes(grupoBotao)) {
+          botao.remove(); // Remove o botão do grupo já apresentado
+        }
+      });
+    }
+  }
+
   function atualizarInterface(estado) {
     estadoAtual = estado;
+    
+    // Resetar estado de voto do usuário em novas rodadas
+    if (estado.votacaoAtiva && estado.totalVotos === 0) {
+      usuarioJaVotou = false;
+    }
     
     // Ocultar empate se não estiver ativo
     if (!empateAtivo) {
@@ -575,15 +629,36 @@
       const botoesContainer = document.createElement("div");
       botoesContainer.className = "botoes-votacao";
 
-      restantes.forEach(grupo => {
+      // Filtrar apenas grupos que ainda não foram apresentados
+      const gruposParaVotar = restantes.filter(grupo => !estado.apresentados.includes(grupo));
+
+      // Verificação adicional de segurança
+      if (gruposParaVotar.length === 0) {
+        votacaoDiv.innerHTML = `<p class="ultimo-grupo">Todos os grupos já foram apresentados!</p>`;
+        return;
+      }
+
+      gruposParaVotar.forEach(grupo => {
         const btn = document.createElement("button");
         btn.textContent = grupo;
         btn.className = "botao-grupo";
-        btn.onclick = () => registrarVoto(grupo);
+        btn.disabled = false; // Garantir que o botão está habilitado
+        btn.onclick = () => registrarVoto(grupo, btn);
         botoesContainer.appendChild(btn);
       });
 
       votacaoDiv.appendChild(botoesContainer);
+
+      // Limpar botões de grupos já apresentados
+      limparBotoesGruposApresentados();
+
+      // Mostrar mensagem se o usuário já votou
+      if (usuarioJaVotou) {
+        const mensagemVoto = document.createElement("p");
+        mensagemVoto.className = "usuario-ja-votou";
+        mensagemVoto.textContent = "✅ Você já votou nesta rodada!";
+        votacaoDiv.appendChild(mensagemVoto);
+      }
 
       const contador = document.createElement("p");
       contador.id = "contador-votos";
@@ -628,6 +703,27 @@
     }
   });
 
+  socket.on('grupoVencedor', (dados) => {
+    if (estadoAtual) {
+      // Remover imediatamente o botão do grupo vencedor
+      const botoesContainer = document.querySelector('.botoes-votacao');
+      if (botoesContainer) {
+        const botoes = botoesContainer.querySelectorAll('.botao-grupo');
+        botoes.forEach(botao => {
+          const grupoBotao = botao.textContent.replace(' ✓', '');
+          if (grupoBotao === dados.vencedor) {
+            botao.style.transition = 'all 0.5s ease';
+            botao.style.transform = 'scale(0)';
+            botao.style.opacity = '0';
+            setTimeout(() => {
+              botao.remove();
+            }, 500);
+          }
+        });
+      }
+    }
+  });
+
   socket.on('novaRodada', (dados) => {
     if (estadoAtual) {
       estadoAtual.rodadaAtual = dados.rodadaAtual;
@@ -636,7 +732,14 @@
         estadoAtual.votos[grupo] = 0;
       });
       estadoAtual.totalVotos = 0;
-      atualizarInterface(estadoAtual);
+      
+      // Resetar estado de voto do usuário
+      usuarioJaVotou = false;
+      
+      // Forçar atualização da interface para remover botões de grupos já apresentados
+      setTimeout(() => {
+        atualizarInterface(estadoAtual);
+      }, 100);
       
       // Atualizar último vencedor se disponível
       if (dados.ultimoVencedor) {
@@ -715,6 +818,10 @@
         estadoAtual.votos[grupo] = 0;
       });
       estadoAtual.totalVotos = 0;
+      
+      // Resetar estado de voto do usuário
+      usuarioJaVotou = false;
+      
       atualizarInterface(estadoAtual);
       
       // Mostrar empate na tela
