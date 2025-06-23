@@ -40,11 +40,13 @@
       cursor: pointer;
       box-shadow: 2px 2px 6px #000;
       transition: all 0.3s ease;
+      min-width: 120px;
     }
 
     button:hover {
       background-color: #0088cc;
       transform: scale(1.05);
+      box-shadow: 3px 3px 8px #000;
     }
 
     button:disabled {
@@ -68,6 +70,16 @@
       margin-top: 15px;
       color: #ffcc00;
       text-align: center;
+    }
+
+    .contador-discreto {
+      font-size: 16px;
+      color: rgba(255, 255, 255, 0.7);
+      margin-top: 20px;
+      padding: 10px;
+      background-color: rgba(0, 0, 0, 0.3);
+      border-radius: 8px;
+      border: 1px solid rgba(255, 255, 255, 0.2);
     }
 
     #status-conexao {
@@ -228,6 +240,62 @@
       font-size: 16px;
       opacity: 0.9;
       margin-top: 10px;
+    }
+
+    .botoes-votacao {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 15px;
+      margin: 20px 0;
+    }
+
+    .botao-grupo {
+      background: linear-gradient(135deg, #00aaff 0%, #0088cc 100%);
+      border: 2px solid #fff;
+      font-size: 20px;
+      padding: 20px 30px;
+      min-width: 150px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+
+    .botao-grupo:hover {
+      background: linear-gradient(135deg, #0088cc 0%, #006699 100%);
+      border-color: #ffcc00;
+    }
+
+    .instrucao-votacao {
+      font-size: 20px;
+      color: #ffcc00;
+      text-align: center;
+      margin: 20px 0;
+      padding: 15px;
+      background-color: rgba(0, 0, 0, 0.4);
+      border-radius: 10px;
+      border: 2px solid #ffcc00;
+    }
+
+    .ultimo-grupo {
+      font-size: 24px;
+      color: #4CAF50;
+      text-align: center;
+      margin: 30px 0;
+      padding: 20px;
+      background-color: rgba(76, 175, 80, 0.2);
+      border-radius: 12px;
+      border: 2px solid #4CAF50;
+    }
+
+    .votacao-encerrada {
+      font-size: 22px;
+      color: #ffcc00;
+      text-align: center;
+      margin: 30px 0;
+      padding: 25px;
+      background-color: rgba(255, 204, 0, 0.1);
+      border-radius: 12px;
+      border: 2px solid #ffcc00;
     }
   </style>
 </head>
@@ -471,7 +539,7 @@
     
     if (!estado.votacaoAtiva) {
       // Votação finalizada
-      votacaoDiv.innerHTML = "<p>Votação encerrada. Obrigado por participar!</p>";
+      votacaoDiv.innerHTML = "<p class='votacao-encerrada'>Votação encerrada. Obrigado por participar!</p>";
       
       resultadoDiv.innerHTML = `<h2>📢 Ordem Final das Apresentações:</h2>`;
       estado.apresentados.forEach((grupo, index) => {
@@ -494,24 +562,32 @@
     
     if (restantes.length === 1) {
       // Último grupo
-      votacaoDiv.innerHTML = `<p>Último grupo: <strong>${restantes[0]}</strong></p>`;
+      votacaoDiv.innerHTML = `<p class="ultimo-grupo">Último grupo: <strong>${restantes[0]}</strong></p>`;
     } else {
       // Múltiplos grupos para votar
       votacaoDiv.innerHTML = "";
       
       const instrucao = document.createElement("p");
       instrucao.textContent = `Rodada ${estado.rodadaAtual}: Clique no grupo que você deseja assistir.`;
+      instrucao.className = "instrucao-votacao";
       votacaoDiv.appendChild(instrucao);
+
+      const botoesContainer = document.createElement("div");
+      botoesContainer.className = "botoes-votacao";
 
       restantes.forEach(grupo => {
         const btn = document.createElement("button");
-        btn.textContent = `${grupo} (${estado.votos[grupo] || 0} votos)`;
+        btn.textContent = grupo;
+        btn.className = "botao-grupo";
         btn.onclick = () => registrarVoto(grupo);
-        votacaoDiv.appendChild(btn);
+        botoesContainer.appendChild(btn);
       });
+
+      votacaoDiv.appendChild(botoesContainer);
 
       const contador = document.createElement("p");
       contador.id = "contador-votos";
+      contador.className = "contador-discreto";
       contador.textContent = `Total de votos: ${estado.totalVotos}`;
       votacaoDiv.appendChild(contador);
     }
