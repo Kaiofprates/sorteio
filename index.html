@@ -3,6 +3,7 @@
 <head>
   <meta charset="utf-8"/>
   <title>Votação de Apresentações</title>
+  <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css">
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@600&display=swap');
 
@@ -137,6 +138,7 @@
 <audio id="som-clique" preload="auto" src="https://themushroomkingdom.net/sounds/wav/smw/smw_jump.wav"></audio>
 <audio id="som-vencedor" preload="auto" src="https://themushroomkingdom.net/sounds/wav/smw/smw_course_clear.wav"></audio>
 
+<script src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
 <script src="/socket.io/socket.io.js"></script>
 <script>
   // Configuração do Socket.IO
@@ -199,13 +201,44 @@
           audioClick.currentTime = 0;
           audioClick.play();
         }
-        alert(data.mensagem);
+        
+        Toastify({
+          text: `✅ Voto computado para o grupo ${grupo}!`,
+          duration: 3000,
+          gravity: "top",
+          position: "right",
+          backgroundColor: "#4CAF50",
+          color: "#fff",
+          fontSize: "16px",
+          fontFamily: "'Orbitron', sans-serif",
+          stopOnFocus: true
+        }).showToast();
       } else {
-        alert('Erro: ' + data.erro);
+        Toastify({
+          text: `❌ Erro: ${data.erro}`,
+          duration: 4000,
+          gravity: "top",
+          position: "right",
+          backgroundColor: "#f44336",
+          color: "#fff",
+          fontSize: "16px",
+          fontFamily: "'Orbitron', sans-serif",
+          stopOnFocus: true
+        }).showToast();
       }
     } catch (error) {
       console.error('Erro ao registrar voto:', error);
-      alert('Erro de conexão. Tente novamente.');
+      Toastify({
+        text: "❌ Erro de conexão. Tente novamente.",
+        duration: 4000,
+        gravity: "top",
+        position: "right",
+        backgroundColor: "#f44336",
+        color: "#fff",
+        fontSize: "16px",
+        fontFamily: "'Orbitron', sans-serif",
+        stopOnFocus: true
+      }).showToast();
     }
   }
 
@@ -323,6 +356,18 @@
       });
       estadoAtual.totalVotos = 0;
       atualizarInterface(estadoAtual);
+      
+      Toastify({
+        text: `🎭 Nova rodada iniciada! Rodada ${dados.rodadaAtual}`,
+        duration: 4000,
+        gravity: "top",
+        position: "center",
+        backgroundColor: "#2196F3",
+        color: "#fff",
+        fontSize: "18px",
+        fontFamily: "'Orbitron', sans-serif",
+        stopOnFocus: true
+      }).showToast();
     }
   });
 
@@ -331,11 +376,35 @@
       estadoAtual.votacaoAtiva = false;
       estadoAtual.apresentados = dados.apresentados;
       atualizarInterface(estadoAtual);
+      
+      Toastify({
+        text: "🏁 Votação completamente finalizada!",
+        duration: 5000,
+        gravity: "top",
+        position: "center",
+        backgroundColor: "#FF9800",
+        color: "#fff",
+        fontSize: "18px",
+        fontFamily: "'Orbitron', sans-serif",
+        stopOnFocus: true
+      }).showToast();
     }
   });
 
   socket.on('votacaoReiniciada', (estado) => {
     atualizarInterface(estado);
+    
+    Toastify({
+      text: "🔄 Votação reiniciada com sucesso!",
+      duration: 4000,
+      gravity: "top",
+      position: "center",
+      backgroundColor: "#4CAF50",
+      color: "#fff",
+      fontSize: "18px",
+      fontFamily: "'Orbitron', sans-serif",
+      stopOnFocus: true
+    }).showToast();
   });
 
   // Eventos de música

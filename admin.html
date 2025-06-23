@@ -3,6 +3,7 @@
 <head>
   <meta charset="utf-8"/>
   <title>Painel Administrativo - Votação de Apresentações</title>
+  <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css">
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@600&display=swap');
 
@@ -159,32 +160,6 @@
       margin-top: 30px;
     }
 
-    .alert {
-      padding: 15px;
-      margin: 15px 0;
-      border-radius: 8px;
-      font-weight: bold;
-      text-align: center;
-    }
-
-    .alert-success {
-      background-color: rgba(76, 175, 80, 0.3);
-      border: 2px solid #4CAF50;
-      color: #4CAF50;
-    }
-
-    .alert-error {
-      background-color: rgba(244, 67, 54, 0.3);
-      border: 2px solid #f44336;
-      color: #f44336;
-    }
-
-    .alert-warning {
-      background-color: rgba(255, 152, 0, 0.3);
-      border: 2px solid #ff9800;
-      color: #ff9800;
-    }
-
     #status-conexao {
       position: fixed;
       top: 15px;
@@ -219,8 +194,6 @@
 <div class="admin-container">
   <h1>🎭 Painel Administrativo</h1>
   <h2>Sistema de Votação de Apresentações</h2>
-
-  <div id="alert-container"></div>
 
   <div class="status-panel">
     <h3>📊 Status da Votação</h3>
@@ -269,6 +242,7 @@
   </div>
 </div>
 
+<script src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
 <script src="/socket.io/socket.io.js"></script>
 <script>
   // Configuração do Socket.IO
@@ -276,7 +250,6 @@
   
   // Elementos do DOM
   const statusConexao = document.getElementById('status-conexao');
-  const alertContainer = document.getElementById('alert-container');
   const estadoVotacao = document.getElementById('estado-votacao');
   const rodadaAtual = document.getElementById('rodada-atual');
   const totalVotos = document.getElementById('total-votos');
@@ -290,18 +263,38 @@
 
   // Funções de utilidade
   function mostrarAlerta(mensagem, tipo = 'success') {
-    const alert = document.createElement('div');
-    alert.className = `alert alert-${tipo}`;
-    alert.textContent = mensagem;
+    let backgroundColor, icon;
     
-    alertContainer.innerHTML = '';
-    alertContainer.appendChild(alert);
+    switch(tipo) {
+      case 'success':
+        backgroundColor = "#4CAF50";
+        icon = "✅";
+        break;
+      case 'error':
+        backgroundColor = "#f44336";
+        icon = "❌";
+        break;
+      case 'warning':
+        backgroundColor = "#FF9800";
+        icon = "⚠️";
+        break;
+      default:
+        backgroundColor = "#2196F3";
+        icon = "ℹ️";
+    }
     
-    setTimeout(() => {
-      if (alert.parentNode) {
-        alert.parentNode.removeChild(alert);
-      }
-    }, 5000);
+    Toastify({
+      text: `${icon} ${mensagem}`,
+      duration: 5000,
+      gravity: "top",
+      position: "center",
+      backgroundColor: backgroundColor,
+      color: "#fff",
+      fontSize: "16px",
+      fontFamily: "'Orbitron', sans-serif",
+      stopOnFocus: true,
+      close: true
+    }).showToast();
   }
 
   function atualizarInterface(estado) {
@@ -436,7 +429,7 @@
       });
       estadoAtual.totalVotos = 0;
       atualizarInterface(estadoAtual);
-      mostrarAlerta(`🎭 Nova rodada iniciada! Rodada ${dados.rodadaAtual}`, 'success');
+      mostrarAlerta(`Nova rodada iniciada! Rodada ${dados.rodadaAtual}`, 'success');
     }
   });
 
@@ -445,12 +438,13 @@
       estadoAtual.votacaoAtiva = false;
       estadoAtual.apresentados = dados.apresentados;
       atualizarInterface(estadoAtual);
-      mostrarAlerta('🏁 Votação completamente finalizada!', 'success');
+      mostrarAlerta('Votação completamente finalizada!', 'warning');
     }
   });
 
   socket.on('votacaoReiniciada', (estado) => {
     atualizarInterface(estado);
+    mostrarAlerta('Votação reiniciada com sucesso!', 'success');
   });
 
   // Inicialização
