@@ -527,6 +527,31 @@
     }).showToast();
   });
 
+  socket.on('empateDetectado', (dados) => {
+    if (estadoAtual) {
+      // Reiniciar votos da rodada atual
+      estadoAtual.votos = {};
+      const restantes = estadoAtual.grupos.filter(g => !estadoAtual.apresentados.includes(g));
+      restantes.forEach(grupo => {
+        estadoAtual.votos[grupo] = 0;
+      });
+      estadoAtual.totalVotos = 0;
+      atualizarInterface(estadoAtual);
+      
+      Toastify({
+        text: `🤝 Empate! ${dados.gruposEmpatados.join(', ')} com ${dados.votosEmpate} votos cada. Rodada reiniciada.`,
+        duration: 5000,
+        gravity: "top",
+        position: "center",
+        backgroundColor: "#FF9800",
+        color: "#fff",
+        fontSize: "18px",
+        fontFamily: "'Orbitron', sans-serif",
+        stopOnFocus: true
+      }).showToast();
+    }
+  });
+
   // Eventos de música
   btnAtivarMusica.addEventListener('click', () => {
     musicaFundo.play().then(() => {

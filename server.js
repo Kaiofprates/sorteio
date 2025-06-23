@@ -84,16 +84,43 @@ app.post('/api/encerrar-rodada', (req, res) => {
   // Encontrar vencedor
   let vencedor = null;
   let maxVotos = -1;
+  let empate = false;
+  let gruposEmpatados = [];
   
   for (let grupo in estadoVotacao.votos) {
     if (estadoVotacao.votos[grupo] > maxVotos) {
       maxVotos = estadoVotacao.votos[grupo];
       vencedor = grupo;
+      gruposEmpatados = [grupo];
+      empate = false;
+    } else if (estadoVotacao.votos[grupo] === maxVotos) {
+      gruposEmpatados.push(grupo);
+      empate = true;
     }
   }
   
   if (!vencedor) {
     return res.status(400).json({ erro: 'Nenhum voto foi registrado nesta rodada' });
+  }
+  
+  // Verificar se há empate
+  if (empate && gruposEmpatados.length > 1) {
+    // Em caso de empate, reiniciar a rodada
+    inicializarVotosRodada();
+    
+    io.emit('empateDetectado', {
+      gruposEmpatados: gruposEmpatados,
+      votosEmpate: maxVotos,
+      rodadaAtual: estadoVotacao.rodadaAtual
+    });
+    
+    return res.json({
+      sucesso: true,
+      empate: true,
+      gruposEmpatados: gruposEmpatados,
+      votosEmpate: maxVotos,
+      mensagem: `Empate detectado! ${gruposEmpatados.join(', ')} com ${maxVotos} votos cada. Rodada reiniciada.`
+    });
   }
   
   // Adicionar vencedor à lista de apresentados
@@ -134,7 +161,8 @@ app.post('/api/encerrar-rodada', (req, res) => {
     vencedor,
     maxVotos,
     apresentados: estadoVotacao.apresentados,
-    votacaoAtiva: estadoVotacao.votacaoAtiva
+    votacaoAtiva: estadoVotacao.votacaoAtiva,
+    empate: false
   });
 });
 

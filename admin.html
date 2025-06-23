@@ -361,7 +361,13 @@
       const data = await response.json();
       
       if (data.sucesso) {
-        mostrarAlerta(`🎉 Rodada encerrada! Vencedor: ${data.vencedor} com ${data.maxVotos} votos`, 'success');
+        if (data.empate) {
+          // Empate detectado - a rodada foi reiniciada automaticamente
+          mostrarAlerta(data.mensagem, 'warning');
+        } else {
+          // Vencedor definido
+          mostrarAlerta(`🎉 Rodada encerrada! Vencedor: ${data.vencedor} com ${data.maxVotos} votos`, 'success');
+        }
       } else {
         mostrarAlerta('Erro: ' + data.erro, 'error');
       }
@@ -445,6 +451,21 @@
   socket.on('votacaoReiniciada', (estado) => {
     atualizarInterface(estado);
     mostrarAlerta('Votação reiniciada com sucesso!', 'success');
+  });
+
+  socket.on('empateDetectado', (dados) => {
+    if (estadoAtual) {
+      // Reiniciar votos da rodada atual
+      estadoAtual.votos = {};
+      const restantes = estadoAtual.grupos.filter(g => !estadoAtual.apresentados.includes(g));
+      restantes.forEach(grupo => {
+        estadoAtual.votos[grupo] = 0;
+      });
+      estadoAtual.totalVotos = 0;
+      atualizarInterface(estadoAtual);
+      
+      mostrarAlerta(`Empate detectado! ${dados.gruposEmpatados.join(', ')} com ${dados.votosEmpate} votos cada. Rodada reiniciada.`, 'warning');
+    }
   });
 
   // Inicialização
