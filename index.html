@@ -172,6 +172,63 @@
       font-style: italic;
       font-size: 18px;
     }
+
+    .empate-section {
+      background-color: rgba(255, 152, 0, 0.2);
+      border: 2px solid #FF9800;
+      border-radius: 12px;
+      padding: 25px;
+      margin: 30px auto;
+      max-width: 600px;
+      text-align: center;
+      box-shadow: 0 0 15px rgba(255, 152, 0, 0.3);
+      display: none;
+    }
+
+    .empate-section.ativo {
+      display: block;
+    }
+
+    .empate-section h3 {
+      color: #FF9800;
+      margin-bottom: 15px;
+      font-size: 24px;
+    }
+
+    .empate-info {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 15px;
+      margin: 15px 0;
+      flex-wrap: wrap;
+    }
+
+    .grupo-empate {
+      font-size: 24px;
+      font-weight: bold;
+      color: #ffcc00;
+      text-shadow: 2px 2px 4px #000;
+      background-color: rgba(0, 0, 0, 0.3);
+      padding: 10px 20px;
+      border-radius: 8px;
+    }
+
+    .empate-votos {
+      background-color: #FF9800;
+      color: #fff;
+      padding: 8px 16px;
+      border-radius: 20px;
+      font-weight: bold;
+      font-size: 18px;
+    }
+
+    .empate-mensagem {
+      color: #fff;
+      font-size: 16px;
+      opacity: 0.9;
+      margin-top: 10px;
+    }
   </style>
 </head>
 <body>
@@ -193,6 +250,17 @@
   </div>
 </div>
 
+<div class="empate-section" id="empate-section">
+  <h3>🤝 Empate Detectado</h3>
+  <div id="empate-container">
+    <div class="empate-info">
+      <span class="grupo-empate">Grupo 1</span>
+      <span class="empate-votos">X votos</span>
+    </div>
+  </div>
+  <p class="empate-mensagem">Rodada reiniciada automaticamente</p>
+</div>
+
 <div id="votacao" class="loading">Carregando...</div>
 <div id="resultado"></div>
 
@@ -210,6 +278,8 @@
   const votacaoDiv = document.getElementById('votacao');
   const resultadoDiv = document.getElementById('resultado');
   const ultimoVencedorContainer = document.getElementById('ultimo-vencedor-container');
+  const empateSection = document.getElementById('empate-section');
+  const empateContainer = document.getElementById('empate-container');
   const audioClick = document.getElementById('som-clique');
   const audioVencedor = document.getElementById('som-vencedor');
   const musicaFundo = document.getElementById('musica-fundo');
@@ -227,6 +297,7 @@
   let indexMusica = 0;
   let estadoAtual = null;
   let ultimoVencedor = null;
+  let empateAtivo = false;
 
   // Funções de música
   function tocarMusicaAtual() {
@@ -336,8 +407,40 @@
     `;
   }
 
+  function mostrarEmpate(gruposEmpatados, votosEmpate) {
+    empateAtivo = true;
+    
+    empateContainer.innerHTML = '';
+    gruposEmpatados.forEach(grupo => {
+      const grupoElement = document.createElement('div');
+      grupoElement.className = 'empate-info';
+      grupoElement.innerHTML = `
+        <span class="grupo-empate">${grupo}</span>
+        <span class="empate-votos">${votosEmpate} votos</span>
+      `;
+      empateContainer.appendChild(grupoElement);
+    });
+    
+    empateSection.classList.add('ativo');
+    
+    // Ocultar empate após 8 segundos
+    setTimeout(() => {
+      ocultarEmpate();
+    }, 8000);
+  }
+
+  function ocultarEmpate() {
+    empateAtivo = false;
+    empateSection.classList.remove('ativo');
+  }
+
   function atualizarInterface(estado) {
     estadoAtual = estado;
+    
+    // Ocultar empate se não estiver ativo
+    if (!empateAtivo) {
+      ocultarEmpate();
+    }
     
     // Mostrar último vencedor se houver grupos já apresentados
     if (estado.apresentados.length > 0) {
@@ -537,6 +640,9 @@
       });
       estadoAtual.totalVotos = 0;
       atualizarInterface(estadoAtual);
+      
+      // Mostrar empate na tela
+      mostrarEmpate(dados.gruposEmpatados, dados.votosEmpate);
       
       Toastify({
         text: `🤝 Empate! ${dados.gruposEmpatados.join(', ')} com ${dados.votosEmpate} votos cada. Rodada reiniciada.`,
