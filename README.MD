@@ -1,15 +1,15 @@
 # 🎭 Sistema de Votação de Apresentações
 
-Sistema de votação em tempo real para escolher a ordem das apresentações dos grupos. Agora com backend centralizado para sincronização entre todos os participantes.
+Sistema de votação em tempo real para escolher a ordem das apresentações dos grupos. Agora com backend centralizado para sincronização entre todos os participantes e painel administrativo separado.
 
 ## ✨ Funcionalidades
 
 - **Votação em tempo real**: Todos os participantes veem os votos atualizados instantaneamente
 - **Sincronização centralizada**: Backend Node.js gerencia todos os votos
+- **Painel administrativo separado**: Interface dedicada para controle da votação
 - **Interface responsiva**: Design moderno e intuitivo
 - **Música de fundo**: Playlist automática durante a votação
 - **Efeitos sonoros**: Sons para cliques e vencedores
-- **Painel administrativo**: Controle da votação pelo administrador
 - **Status de conexão**: Indicador visual de conectividade
 
 ## 🚀 Como usar
@@ -43,26 +43,30 @@ npm start
 npm run dev
 ```
 
-3. Acesse no navegador: `http://localhost:3000`
+3. Acesse no navegador:
+   - **Página de votação**: `http://localhost:3000`
+   - **Painel administrativo**: `http://localhost:3000/admin`
 
 ## 📱 Como funciona
 
 ### Para os participantes:
-1. Acesse o site no navegador
+1. Acesse `http://localhost:3000` no navegador
 2. Veja o status de conexão no canto superior direito
 3. Clique no grupo que deseja votar
 4. Acompanhe os votos em tempo real
 5. Aguarde o anúncio do vencedor
 
 ### Para o administrador:
-1. Acompanhe os votos em tempo real
-2. Clique em "Encerrar Votação da Rodada" quando quiser finalizar
-3. O sistema automaticamente:
-   - Anuncia o vencedor
-   - Toca o som de vitória
-   - Avança para a próxima música
-   - Inicia a próxima rodada
-4. Ao final, pode reiniciar a votação
+1. Acesse `http://localhost:3000/admin` no navegador
+2. Monitore em tempo real:
+   - Status da votação
+   - Votos da rodada atual
+   - Grupos já apresentados
+   - Total de votos
+3. Use os botões para:
+   - **Encerrar Votação da Rodada**: Finaliza a rodada atual
+   - **Reiniciar Votação Completa**: Reseta todo o sistema
+   - **Abrir Página de Votação**: Abre a página principal em nova aba
 
 ## 🔧 Tecnologias utilizadas
 
@@ -76,9 +80,11 @@ npm run dev
 
 ```
 site-lucas/
-├── index.html          # Interface principal
+├── index.html          # Interface principal de votação
+├── admin.html          # Painel administrativo
 ├── server.js           # Servidor backend
 ├── package.json        # Dependências e scripts
+├── iniciar.bat         # Script de inicialização (Windows)
 └── README.MD          # Este arquivo
 ```
 

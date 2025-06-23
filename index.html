@@ -132,8 +132,13 @@
 
 <h1>🎭 Votação: Escolha o próximo grupo a se apresentar</h1>
 <div id="votacao" class="loading">Carregando...</div>
-<div id="painel-admin"></div>
 <div id="resultado"></div>
+
+<div style="text-align: center; margin-top: 30px;">
+  <a href="/admin" target="_blank" style="color: #ffcc00; text-decoration: none; font-size: 16px;">
+    👨‍💼 Acessar Painel Administrativo
+  </a>
+</div>
 
 <audio id="som-clique" preload="auto" src="https://themushroomkingdom.net/sounds/wav/smw/smw_jump.wav"></audio>
 <audio id="som-vencedor" preload="auto" src="https://themushroomkingdom.net/sounds/wav/smw/smw_course_clear.wav"></audio>
@@ -146,7 +151,6 @@
   // Elementos do DOM
   const statusConexao = document.getElementById('status-conexao');
   const votacaoDiv = document.getElementById('votacao');
-  const painelAdminDiv = document.getElementById('painel-admin');
   const resultadoDiv = document.getElementById('resultado');
   const audioClick = document.getElementById('som-clique');
   const audioVencedor = document.getElementById('som-vencedor');
@@ -211,68 +215,6 @@
     }
   }
 
-  async function encerrarRodada() {
-    try {
-      const response = await fetch('/api/encerrar-rodada', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        }
-      });
-
-      const data = await response.json();
-      
-      if (data.sucesso) {
-        if (audioVencedor) {
-          audioVencedor.currentTime = 0;
-          audioVencedor.play();
-        }
-        
-        // Para a música atual
-        musicaFundo.pause();
-        musicaFundo.currentTime = 0;
-        
-        // Mostrar vencedor temporariamente
-        mostrarVencedorTemporario(data.vencedor, data.maxVotos);
-        
-        // Avançar música e continuar após som do vencedor
-        setTimeout(() => {
-          indexMusica = (indexMusica + 1) % musicas.length;
-          tocarMusicaAtual();
-        }, 6000);
-        
-      } else {
-        alert('Erro: ' + data.erro);
-      }
-    } catch (error) {
-      console.error('Erro ao encerrar rodada:', error);
-      alert('Erro de conexão. Tente novamente.');
-    }
-  }
-
-  async function reiniciarVotacao() {
-    try {
-      const response = await fetch('/api/reiniciar', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        }
-      });
-
-      const data = await response.json();
-      
-      if (data.sucesso) {
-        alert('Votação reiniciada com sucesso!');
-        atualizarInterface(data.estado);
-      } else {
-        alert('Erro ao reiniciar votação');
-      }
-    } catch (error) {
-      console.error('Erro ao reiniciar votação:', error);
-      alert('Erro de conexão. Tente novamente.');
-    }
-  }
-
   function mostrarVencedorTemporario(vencedor, maxVotos) {
     const anuncio = document.createElement('div');
     anuncio.className = 'vencedor-anuncio';
@@ -298,7 +240,6 @@
     if (!estado.votacaoAtiva) {
       // Votação finalizada
       votacaoDiv.innerHTML = "<p>Votação encerrada. Obrigado por participar!</p>";
-      painelAdminDiv.innerHTML = "";
       
       resultadoDiv.innerHTML = `<h2>📢 Ordem Final das Apresentações:</h2>`;
       estado.apresentados.forEach((grupo, index) => {
@@ -342,13 +283,6 @@
       contador.textContent = `Total de votos: ${estado.totalVotos}`;
       votacaoDiv.appendChild(contador);
     }
-
-    // Painel do administrador
-    painelAdminDiv.innerHTML = "";
-    const btnEncerrar = document.createElement("button");
-    btnEncerrar.textContent = "✅ Encerrar Votação da Rodada (Administrador)";
-    btnEncerrar.onclick = encerrarRodada;
-    painelAdminDiv.appendChild(btnEncerrar);
 
     // Mostrar grupos já apresentados
     if (estado.apresentados.length > 0) {

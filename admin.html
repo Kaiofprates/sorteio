@@ -1,0 +1,463 @@
+<!DOCTYPE html> 
+<html lang="pt-br">
+<head>
+  <meta charset="utf-8"/>
+  <title>Painel Administrativo - Votação de Apresentações</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@600&display=swap');
+
+    body {
+      font-family: 'Orbitron', sans-serif;
+      margin: 0;
+      padding: 20px;
+      background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+      color: #fff;
+      text-shadow: 1px 1px 2px #000;
+      min-height: 100vh;
+    }
+
+    h1, h2 {
+      text-align: center;
+      color: #ffcc00;
+      margin-bottom: 30px;
+    }
+
+    .admin-container {
+      max-width: 800px;
+      margin: 0 auto;
+      background-color: rgba(0, 0, 0, 0.7);
+      padding: 30px;
+      border-radius: 15px;
+      box-shadow: 0 0 20px rgba(0,0,0,0.8);
+    }
+
+    .status-panel {
+      background-color: rgba(255, 255, 255, 0.1);
+      padding: 20px;
+      border-radius: 10px;
+      margin-bottom: 30px;
+      border: 2px solid #ffcc00;
+    }
+
+    .status-item {
+      display: flex;
+      justify-content: space-between;
+      margin: 10px 0;
+      padding: 10px;
+      background-color: rgba(0, 0, 0, 0.3);
+      border-radius: 5px;
+    }
+
+    .status-label {
+      font-weight: bold;
+      color: #ffcc00;
+    }
+
+    .status-value {
+      color: #fff;
+    }
+
+    .votos-panel {
+      background-color: rgba(255, 255, 255, 0.1);
+      padding: 20px;
+      border-radius: 10px;
+      margin-bottom: 30px;
+    }
+
+    .voto-item {
+      display: flex;
+      justify-content: space-between;
+      margin: 10px 0;
+      padding: 15px;
+      background-color: rgba(0, 0, 0, 0.3);
+      border-radius: 8px;
+      border-left: 4px solid #00aaff;
+    }
+
+    .grupo-nome {
+      font-weight: bold;
+      font-size: 18px;
+    }
+
+    .voto-count {
+      background-color: #ffcc00;
+      color: #000;
+      padding: 5px 15px;
+      border-radius: 20px;
+      font-weight: bold;
+      font-size: 16px;
+    }
+
+    .apresentados-panel {
+      background-color: rgba(255, 255, 255, 0.1);
+      padding: 20px;
+      border-radius: 10px;
+      margin-bottom: 30px;
+    }
+
+    .apresentado-item {
+      padding: 10px;
+      margin: 5px 0;
+      background-color: rgba(0, 0, 0, 0.3);
+      border-radius: 5px;
+      border-left: 4px solid #4CAF50;
+    }
+
+    button {
+      margin: 10px;
+      padding: 15px 25px;
+      font-size: 18px;
+      font-weight: bold;
+      background-color: #00aaff;
+      border: none;
+      border-radius: 10px;
+      color: #fff;
+      cursor: pointer;
+      box-shadow: 2px 2px 6px #000;
+      transition: all 0.3s ease;
+      width: 100%;
+      max-width: 300px;
+    }
+
+    button:hover {
+      background-color: #0088cc;
+      transform: scale(1.05);
+    }
+
+    button:disabled {
+      background-color: #666;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    .btn-danger {
+      background-color: #f44336;
+    }
+
+    .btn-danger:hover {
+      background-color: #d32f2f;
+    }
+
+    .btn-success {
+      background-color: #4CAF50;
+    }
+
+    .btn-success:hover {
+      background-color: #45a049;
+    }
+
+    .btn-warning {
+      background-color: #ff9800;
+    }
+
+    .btn-warning:hover {
+      background-color: #e68900;
+    }
+
+    .actions-panel {
+      text-align: center;
+      margin-top: 30px;
+    }
+
+    .alert {
+      padding: 15px;
+      margin: 15px 0;
+      border-radius: 8px;
+      font-weight: bold;
+      text-align: center;
+    }
+
+    .alert-success {
+      background-color: rgba(76, 175, 80, 0.3);
+      border: 2px solid #4CAF50;
+      color: #4CAF50;
+    }
+
+    .alert-error {
+      background-color: rgba(244, 67, 54, 0.3);
+      border: 2px solid #f44336;
+      color: #f44336;
+    }
+
+    .alert-warning {
+      background-color: rgba(255, 152, 0, 0.3);
+      border: 2px solid #ff9800;
+      color: #ff9800;
+    }
+
+    #status-conexao {
+      position: fixed;
+      top: 15px;
+      right: 15px;
+      padding: 10px 15px;
+      border-radius: 5px;
+      font-weight: bold;
+      z-index: 1000;
+    }
+
+    .conectado {
+      background-color: #4CAF50;
+      color: white;
+    }
+
+    .desconectado {
+      background-color: #f44336;
+      color: white;
+    }
+
+    .loading {
+      text-align: center;
+      font-size: 20px;
+      color: #ffcc00;
+    }
+  </style>
+</head>
+<body>
+
+<div id="status-conexao" class="desconectado">🔴 Desconectado</div>
+
+<div class="admin-container">
+  <h1>🎭 Painel Administrativo</h1>
+  <h2>Sistema de Votação de Apresentações</h2>
+
+  <div id="alert-container"></div>
+
+  <div class="status-panel">
+    <h3>📊 Status da Votação</h3>
+    <div class="status-item">
+      <span class="status-label">Estado:</span>
+      <span class="status-value" id="estado-votacao">Carregando...</span>
+    </div>
+    <div class="status-item">
+      <span class="status-label">Rodada Atual:</span>
+      <span class="status-value" id="rodada-atual">-</span>
+    </div>
+    <div class="status-item">
+      <span class="status-label">Total de Votos:</span>
+      <span class="status-value" id="total-votos">0</span>
+    </div>
+    <div class="status-item">
+      <span class="status-label">Grupos Restantes:</span>
+      <span class="status-value" id="grupos-restantes">-</span>
+    </div>
+  </div>
+
+  <div class="votos-panel">
+    <h3>🗳️ Votos da Rodada Atual</h3>
+    <div id="votos-container" class="loading">Carregando votos...</div>
+  </div>
+
+  <div class="apresentados-panel">
+    <h3>📋 Grupos Já Apresentados</h3>
+    <div id="apresentados-container">
+      <p>Nenhum grupo apresentado ainda.</p>
+    </div>
+  </div>
+
+  <div class="actions-panel">
+    <button id="btn-encerrar" class="btn-danger" onclick="encerrarRodada()">
+      ✅ Encerrar Votação da Rodada
+    </button>
+    <br>
+    <button id="btn-reiniciar" class="btn-warning" onclick="reiniciarVotacao()">
+      🔄 Reiniciar Votação Completa
+    </button>
+    <br>
+    <button id="btn-voltar" class="btn-success" onclick="window.open('/', '_blank')">
+      📱 Abrir Página de Votação
+    </button>
+  </div>
+</div>
+
+<script src="/socket.io/socket.io.js"></script>
+<script>
+  // Configuração do Socket.IO
+  const socket = io();
+  
+  // Elementos do DOM
+  const statusConexao = document.getElementById('status-conexao');
+  const alertContainer = document.getElementById('alert-container');
+  const estadoVotacao = document.getElementById('estado-votacao');
+  const rodadaAtual = document.getElementById('rodada-atual');
+  const totalVotos = document.getElementById('total-votos');
+  const gruposRestantes = document.getElementById('grupos-restantes');
+  const votosContainer = document.getElementById('votos-container');
+  const apresentadosContainer = document.getElementById('apresentados-container');
+  const btnEncerrar = document.getElementById('btn-encerrar');
+  const btnReiniciar = document.getElementById('btn-reiniciar');
+
+  let estadoAtual = null;
+
+  // Funções de utilidade
+  function mostrarAlerta(mensagem, tipo = 'success') {
+    const alert = document.createElement('div');
+    alert.className = `alert alert-${tipo}`;
+    alert.textContent = mensagem;
+    
+    alertContainer.innerHTML = '';
+    alertContainer.appendChild(alert);
+    
+    setTimeout(() => {
+      if (alert.parentNode) {
+        alert.parentNode.removeChild(alert);
+      }
+    }, 5000);
+  }
+
+  function atualizarInterface(estado) {
+    estadoAtual = estado;
+    
+    // Status da votação
+    estadoVotacao.textContent = estado.votacaoAtiva ? '🟢 Ativa' : '🔴 Encerrada';
+    rodadaAtual.textContent = estado.rodadaAtual;
+    totalVotos.textContent = estado.totalVotos;
+    
+    const restantes = estado.grupos.filter(g => !estado.apresentados.includes(g));
+    gruposRestantes.textContent = restantes.length;
+    
+    // Votos da rodada atual
+    if (estado.votacaoAtiva && restantes.length > 1) {
+      votosContainer.innerHTML = '';
+      restantes.forEach(grupo => {
+        const votoItem = document.createElement('div');
+        votoItem.className = 'voto-item';
+        votoItem.innerHTML = `
+          <span class="grupo-nome">${grupo}</span>
+          <span class="voto-count">${estado.votos[grupo] || 0} votos</span>
+        `;
+        votosContainer.appendChild(votoItem);
+      });
+    } else if (restantes.length === 1) {
+      votosContainer.innerHTML = `<p><strong>Último grupo: ${restantes[0]}</strong></p>`;
+    } else {
+      votosContainer.innerHTML = '<p>Nenhum grupo restante para votar.</p>';
+    }
+    
+    // Grupos já apresentados
+    if (estado.apresentados.length > 0) {
+      apresentadosContainer.innerHTML = '';
+      estado.apresentados.forEach((grupo, index) => {
+        const apresentadoItem = document.createElement('div');
+        apresentadoItem.className = 'apresentado-item';
+        apresentadoItem.innerHTML = `<strong>${index + 1}º</strong> - ${grupo}`;
+        apresentadosContainer.appendChild(apresentadoItem);
+      });
+    } else {
+      apresentadosContainer.innerHTML = '<p>Nenhum grupo apresentado ainda.</p>';
+    }
+    
+    // Habilitar/desabilitar botões
+    btnEncerrar.disabled = !estado.votacaoAtiva || restantes.length <= 1;
+    btnReiniciar.disabled = estado.votacaoAtiva && estado.apresentados.length === 0;
+  }
+
+  // Funções de ação
+  async function encerrarRodada() {
+    if (!confirm('Tem certeza que deseja encerrar a votação da rodada atual?')) {
+      return;
+    }
+    
+    try {
+      const response = await fetch('/api/encerrar-rodada', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        }
+      });
+
+      const data = await response.json();
+      
+      if (data.sucesso) {
+        mostrarAlerta(`🎉 Rodada encerrada! Vencedor: ${data.vencedor} com ${data.maxVotos} votos`, 'success');
+      } else {
+        mostrarAlerta('Erro: ' + data.erro, 'error');
+      }
+    } catch (error) {
+      console.error('Erro ao encerrar rodada:', error);
+      mostrarAlerta('Erro de conexão. Tente novamente.', 'error');
+    }
+  }
+
+  async function reiniciarVotacao() {
+    if (!confirm('Tem certeza que deseja reiniciar toda a votação? Isso apagará todos os resultados.')) {
+      return;
+    }
+    
+    try {
+      const response = await fetch('/api/reiniciar', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        }
+      });
+
+      const data = await response.json();
+      
+      if (data.sucesso) {
+        mostrarAlerta('🔄 Votação reiniciada com sucesso!', 'success');
+      } else {
+        mostrarAlerta('Erro ao reiniciar votação', 'error');
+      }
+    } catch (error) {
+      console.error('Erro ao reiniciar votação:', error);
+      mostrarAlerta('Erro de conexão. Tente novamente.', 'error');
+    }
+  }
+
+  // Eventos do Socket.IO
+  socket.on('connect', () => {
+    statusConexao.textContent = '🟢 Conectado';
+    statusConexao.className = 'conectado';
+  });
+
+  socket.on('disconnect', () => {
+    statusConexao.textContent = '🔴 Desconectado';
+    statusConexao.className = 'desconectado';
+  });
+
+  socket.on('estadoAtual', (estado) => {
+    atualizarInterface(estado);
+  });
+
+  socket.on('votoRegistrado', (dados) => {
+    if (estadoAtual) {
+      estadoAtual.votos = dados.votos;
+      estadoAtual.totalVotos = dados.totalVotos;
+      atualizarInterface(estadoAtual);
+    }
+  });
+
+  socket.on('novaRodada', (dados) => {
+    if (estadoAtual) {
+      estadoAtual.rodadaAtual = dados.rodadaAtual;
+      estadoAtual.votos = {};
+      dados.restantes.forEach(grupo => {
+        estadoAtual.votos[grupo] = 0;
+      });
+      estadoAtual.totalVotos = 0;
+      atualizarInterface(estadoAtual);
+      mostrarAlerta(`🎭 Nova rodada iniciada! Rodada ${dados.rodadaAtual}`, 'success');
+    }
+  });
+
+  socket.on('votacaoFinalizada', (dados) => {
+    if (estadoAtual) {
+      estadoAtual.votacaoAtiva = false;
+      estadoAtual.apresentados = dados.apresentados;
+      atualizarInterface(estadoAtual);
+      mostrarAlerta('🏁 Votação completamente finalizada!', 'success');
+    }
+  });
+
+  socket.on('votacaoReiniciada', (estado) => {
+    atualizarInterface(estado);
+  });
+
+  // Inicialização
+  window.addEventListener('load', () => {
+    console.log('Painel administrativo carregado');
+  });
+</script>
+
+</body>
+</html> 
