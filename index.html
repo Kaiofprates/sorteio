@@ -1,0 +1,272 @@
+<!DOCTYPE html> 
+<html lang="pt-br">
+<head>
+  <meta charset="utf-8"/>
+  <title>Votação de Apresentações</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@600&display=swap');
+
+    body {
+      font-family: 'Orbitron', sans-serif;
+      margin: 0;
+      padding: 20px;
+      background: url('https://images.unsplash.com/photo-1612287230202-1ff1d85d1bdf?q=80&w=871&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D') no-repeat center center fixed;
+      background-size: cover;
+      color: #fff;
+      text-shadow: 1px 1px 2px #000;
+    }
+
+    h1, h2 {
+      text-align: center;
+      color: #ffcc00;
+      margin-bottom: 30px;
+    }
+
+    p {
+      font-size: 18px;
+      text-align: center;
+    }
+
+    button {
+      margin: 10px;
+      padding: 15px 25px;
+      font-size: 18px;
+      font-weight: bold;
+      background-color: #00aaff;
+      border: none;
+      border-radius: 10px;
+      color: #fff;
+      cursor: pointer;
+      box-shadow: 2px 2px 6px #000;
+      transition: all 0.3s ease;
+    }
+
+    button:hover {
+      background-color: #0088cc;
+      transform: scale(1.05);
+    }
+
+    #votacao, #resultado, #painel-admin {
+      background-color: rgba(0, 0, 0, 0.7);
+      padding: 25px;
+      border-radius: 12px;
+      margin: 30px auto;
+      max-width: 700px;
+      box-shadow: 0 0 15px rgba(0,0,0,0.6);
+    }
+
+    #contador-votos {
+      font-weight: bold;
+      font-size: 20px;
+      margin-top: 15px;
+      color: #ffcc00;
+      text-align: center;
+    }
+
+    #btn-ativar-musica {
+      position: fixed;
+      bottom: 15px;
+      left: 15px;
+      z-index: 999;
+      padding: 10px 20px;
+      background: #ffcc00;
+      border: none;
+      border-radius: 5px;
+      font-weight: bold;
+      cursor: pointer;
+      color: black;
+      display: none;
+    }
+  </style>
+</head>
+<body>
+
+<button id="btn-ativar-musica">🔊 Ativar Música</button>
+
+<audio id="musica-fundo" loop preload="auto" style="display:none">
+  <source src="" type="audio/webm" id="source-musica">
+  Seu navegador não suporta áudio.
+</audio>
+
+<h1>🎭 Votação: Escolha o próximo grupo a se apresentar</h1>
+<div id="votacao"></div>
+<div id="painel-admin"></div>
+<div id="resultado"></div>
+
+<audio id="som-clique" preload="auto" src="https://themushroomkingdom.net/sounds/wav/smw/smw_jump.wav"></audio>
+<audio id="som-vencedor" preload="auto" src="https://themushroomkingdom.net/sounds/wav/smw/smw_course_clear.wav"></audio>
+
+<script>
+  // Lista de músicas com a segunda da lista original como primeira
+  const musicas = [
+    "https://files.catbox.moe/uj5v63.weba",  // antes segunda
+    "https://files.catbox.moe/d4y9ue.weba",  // antes primeira
+    "https://files.catbox.moe/br6ycz.weba",
+    "https://files.catbox.moe/rnd7ao.weba"
+  ];
+
+  let indexMusica = 0;
+
+  const musicaFundo = document.getElementById('musica-fundo');
+  const sourceMusica = document.getElementById('source-musica');
+  const btnAtivarMusica = document.getElementById('btn-ativar-musica');
+
+  function tocarMusicaAtual() {
+    sourceMusica.src = musicas[indexMusica];
+    musicaFundo.load();
+    musicaFundo.play().catch(() => {
+      btnAtivarMusica.style.display = 'block';
+    });
+  }
+
+  function tentarIniciarMusica() {
+    tocarMusicaAtual();
+    setTimeout(() => {
+      if (musicaFundo.paused) {
+        btnAtivarMusica.style.display = 'block';
+      }
+    }, 2000);
+  }
+
+  window.addEventListener('load', () => {
+    tentarIniciarMusica();
+  });
+
+  btnAtivarMusica.addEventListener('click', () => {
+    musicaFundo.play().then(() => {
+      btnAtivarMusica.style.display = 'none';
+    });
+  });
+
+  const grupos = ["Rosa", "Verde", "Vermelho", "Amarelo"];
+  let apresentados = [];
+  let votos = {};
+  let totalVotos = 0;
+
+  const audioClick = document.getElementById("som-clique");
+  const audioVencedor = document.getElementById("som-vencedor");
+
+  function atualizarVotacao() {
+    const votacaoDiv = document.getElementById("votacao");
+    const painelAdminDiv = document.getElementById("painel-admin");
+    votacaoDiv.innerHTML = "";
+    painelAdminDiv.innerHTML = "";
+    totalVotos = 0;
+
+    const restantes = grupos.filter(g => !apresentados.includes(g));
+
+    if (restantes.length === 1) {
+      apresentados.push(restantes[0]);
+      mostrarResultado();
+      return;
+    }
+
+    const instrucao = document.createElement("p");
+    instrucao.textContent = "Clique no grupo que você deseja assistir.";
+    votacaoDiv.appendChild(instrucao);
+
+    votos = {};
+    restantes.forEach(grupo => {
+      votos[grupo] = 0;
+      const btn = document.createElement("button");
+      btn.textContent = grupo;
+      btn.onclick = () => {
+        if (audioClick) {
+          audioClick.currentTime = 0;
+          audioClick.play();
+        }
+        registrarVoto(grupo);
+      };
+      votacaoDiv.appendChild(btn);
+    });
+
+    const contador = document.createElement("p");
+    contador.id = "contador-votos";
+    contador.textContent = `Votos registrados: 0`;
+    votacaoDiv.appendChild(contador);
+
+    const btnEncerrar = document.createElement("button");
+    btnEncerrar.textContent = "✅ Encerrar Votação da Rodada (Administrador)";
+    btnEncerrar.onclick = escolherVencedor;
+    painelAdminDiv.appendChild(btnEncerrar);
+  }
+
+  function registrarVoto(grupo) {
+    votos[grupo]++;
+    totalVotos++;
+    document.getElementById("contador-votos").textContent = `Votos registrados: ${totalVotos}`;
+    alert(`Voto computado para o grupo ${grupo}`);
+  }
+
+  function escolherVencedor() {
+    let vencedor = null;
+    let maxVotos = -1;
+    for (let grupo in votos) {
+      if (votos[grupo] > maxVotos) {
+        maxVotos = votos[grupo];
+        vencedor = grupo;
+      }
+    }
+
+    if (!vencedor) {
+      alert("Nenhum voto foi registrado nesta rodada.");
+      return;
+    }
+
+    apresentados.push(vencedor);
+    const resultadoDiv = document.getElementById("resultado");
+    resultadoDiv.innerHTML = `<h2>🎉 Grupo escolhido para se apresentar:</h2><p>${vencedor} com ${maxVotos} votos</p>`;
+
+    if (audioVencedor) {
+      audioVencedor.currentTime = 0;
+      audioVencedor.play();
+    }
+
+    // Para a música de fundo atual
+    musicaFundo.pause();
+    musicaFundo.currentTime = 0;
+
+    // Espera o som do vencedor acabar + 6 segundos antes de tocar próxima música e atualizar votação
+    const duracaoSomVencedor = audioVencedor.duration || 10; // fallback para 10s se não conseguir pegar duração
+
+    audioVencedor.onended = () => {
+      setTimeout(() => {
+        // Avança para próxima música
+        indexMusica = (indexMusica + 1) % musicas.length;
+        tocarMusicaAtual();
+        atualizarVotacao();
+      }, 6000);
+    };
+
+    // Fallback caso o evento onended não funcione ou o som já tenha terminado
+    setTimeout(() => {
+      if (audioVencedor.paused) {
+        indexMusica = (indexMusica + 1) % musicas.length;
+        tocarMusicaAtual();
+        atualizarVotacao();
+      }
+    }, (duracaoSomVencedor + 6) * 1000);
+  }
+
+  function mostrarResultado() {
+    const resultadoDiv = document.getElementById("resultado");
+    resultadoDiv.innerHTML = `<h2>📢 Ordem Final das Apresentações:</h2>`;
+    apresentados.forEach((grupo, index) => {
+      const p = document.createElement("p");
+      p.textContent = `${index + 1}º - ${grupo}`;
+      resultadoDiv.appendChild(p);
+    });
+
+    document.getElementById("votacao").innerHTML = "<p>Votação encerrada. Obrigado por participar!</p>";
+    document.getElementById("painel-admin").innerHTML = "";
+  }
+
+  // Começa a votação e a música logo que carrega a página
+  window.onload = () => {
+    tentarIniciarMusica();
+    atualizarVotacao();
+  };
+</script>
+
+</body>
+</html>
