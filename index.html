@@ -119,6 +119,59 @@
       margin: 20px 0;
       text-align: center;
     }
+
+    .ultimo-vencedor {
+      background-color: rgba(76, 175, 80, 0.2);
+      border: 2px solid #4CAF50;
+      border-radius: 12px;
+      padding: 25px;
+      margin: 30px auto;
+      max-width: 600px;
+      text-align: center;
+      box-shadow: 0 0 15px rgba(76, 175, 80, 0.3);
+    }
+
+    .ultimo-vencedor h3 {
+      color: #4CAF50;
+      margin-bottom: 15px;
+      font-size: 24px;
+    }
+
+    .vencedor-info {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 15px;
+      margin: 15px 0;
+    }
+
+    .vencedor-grupo {
+      font-size: 32px;
+      font-weight: bold;
+      color: #ffcc00;
+      text-shadow: 2px 2px 4px #000;
+    }
+
+    .vencedor-votos {
+      background-color: #ffcc00;
+      color: #000;
+      padding: 8px 16px;
+      border-radius: 20px;
+      font-weight: bold;
+      font-size: 18px;
+    }
+
+    .vencedor-rodada {
+      color: #fff;
+      font-size: 16px;
+      opacity: 0.8;
+    }
+
+    .sem-vencedor {
+      color: #ccc;
+      font-style: italic;
+      font-size: 18px;
+    }
   </style>
 </head>
 <body>
@@ -132,6 +185,14 @@
 </audio>
 
 <h1>🎭 Votação: Escolha o próximo grupo a se apresentar</h1>
+
+<div class="ultimo-vencedor">
+  <h3>🏆 Último Vencedor</h3>
+  <div id="ultimo-vencedor-container">
+    <p class="sem-vencedor">Aguardando primeiro vencedor...</p>
+  </div>
+</div>
+
 <div id="votacao" class="loading">Carregando...</div>
 <div id="resultado"></div>
 
@@ -148,6 +209,7 @@
   const statusConexao = document.getElementById('status-conexao');
   const votacaoDiv = document.getElementById('votacao');
   const resultadoDiv = document.getElementById('resultado');
+  const ultimoVencedorContainer = document.getElementById('ultimo-vencedor-container');
   const audioClick = document.getElementById('som-clique');
   const audioVencedor = document.getElementById('som-vencedor');
   const musicaFundo = document.getElementById('musica-fundo');
@@ -164,6 +226,7 @@
 
   let indexMusica = 0;
   let estadoAtual = null;
+  let ultimoVencedor = null;
 
   // Funções de música
   function tocarMusicaAtual() {
@@ -261,8 +324,47 @@
     }, 6000);
   }
 
+  function atualizarUltimoVencedor(vencedor, maxVotos, rodada) {
+    ultimoVencedor = { grupo: vencedor, votos: maxVotos, rodada: rodada };
+    
+    ultimoVencedorContainer.innerHTML = `
+      <div class="vencedor-info">
+        <span class="vencedor-grupo">${vencedor}</span>
+        <span class="vencedor-votos">${maxVotos} votos</span>
+      </div>
+      <p class="vencedor-rodada">Rodada ${rodada}</p>
+    `;
+  }
+
   function atualizarInterface(estado) {
     estadoAtual = estado;
+    
+    // Mostrar último vencedor se houver grupos já apresentados
+    if (estado.apresentados.length > 0) {
+      const ultimoApresentado = estado.apresentados[estado.apresentados.length - 1];
+      
+      // Se temos informações detalhadas do último vencedor, usar elas
+      if (estado.ultimoVencedor && estado.ultimoVencedor.grupo === ultimoApresentado) {
+        ultimoVencedorContainer.innerHTML = `
+          <div class="vencedor-info">
+            <span class="vencedor-grupo">${estado.ultimoVencedor.grupo}</span>
+            <span class="vencedor-votos">${estado.ultimoVencedor.votos} votos</span>
+          </div>
+          <p class="vencedor-rodada">Rodada ${estado.ultimoVencedor.rodada}</p>
+        `;
+      } else {
+        // Fallback para mostrar apenas o grupo e a posição
+        ultimoVencedorContainer.innerHTML = `
+          <div class="vencedor-info">
+            <span class="vencedor-grupo">${ultimoApresentado}</span>
+            <span class="vencedor-votos">Vencedor</span>
+          </div>
+          <p class="vencedor-rodada">${estado.apresentados.length}º lugar</p>
+        `;
+      }
+    } else {
+      ultimoVencedorContainer.innerHTML = '<p class="sem-vencedor">Aguardando primeiro vencedor...</p>';
+    }
     
     if (!estado.votacaoAtiva) {
       // Votação finalizada
@@ -357,6 +459,15 @@
       estadoAtual.totalVotos = 0;
       atualizarInterface(estadoAtual);
       
+      // Atualizar último vencedor se disponível
+      if (dados.ultimoVencedor) {
+        atualizarUltimoVencedor(
+          dados.ultimoVencedor.grupo,
+          dados.ultimoVencedor.votos,
+          dados.ultimoVencedor.rodada
+        );
+      }
+      
       Toastify({
         text: `🎭 Nova rodada iniciada! Rodada ${dados.rodadaAtual}`,
         duration: 4000,
@@ -376,6 +487,15 @@
       estadoAtual.votacaoAtiva = false;
       estadoAtual.apresentados = dados.apresentados;
       atualizarInterface(estadoAtual);
+      
+      // Atualizar último vencedor se disponível
+      if (dados.ultimoVencedor) {
+        atualizarUltimoVencedor(
+          dados.ultimoVencedor.grupo,
+          dados.ultimoVencedor.votos,
+          dados.ultimoVencedor.rodada
+        );
+      }
       
       Toastify({
         text: "🏁 Votação completamente finalizada!",

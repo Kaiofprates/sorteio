@@ -7,6 +7,7 @@ Sistema de votação em tempo real para escolher a ordem das apresentações dos
 - **Votação em tempo real**: Todos os participantes veem os votos atualizados instantaneamente
 - **Sincronização centralizada**: Backend Node.js gerencia todos os votos
 - **Painel administrativo separado**: Interface dedicada para controle da votação
+- **Notificações elegantes**: Toastify para alertas e notificações em tempo real
 - **Interface responsiva**: Design moderno e intuitivo
 - **Música de fundo**: Playlist automática durante a votação
 - **Efeitos sonoros**: Sons para cliques e vencedores
@@ -73,6 +74,7 @@ npm run dev
 - **Frontend**: HTML5, CSS3, JavaScript (ES6+)
 - **Backend**: Node.js, Express.js
 - **Tempo real**: Socket.IO
+- **Notificações**: Toastify.js
 - **Estilização**: CSS customizado com fonte Orbitron
 - **Áudio**: Web Audio API
 

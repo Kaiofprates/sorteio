@@ -25,7 +25,8 @@ let estadoVotacao = {
   votos: {},
   totalVotos: 0,
   votacaoAtiva: true,
-  rodadaAtual: 1
+  rodadaAtual: 1,
+  ultimoVencedor: null
 };
 
 // Função para inicializar votos da rodada atual
@@ -98,6 +99,13 @@ app.post('/api/encerrar-rodada', (req, res) => {
   // Adicionar vencedor à lista de apresentados
   estadoVotacao.apresentados.push(vencedor);
   
+  // Armazenar informações do último vencedor
+  estadoVotacao.ultimoVencedor = {
+    grupo: vencedor,
+    votos: maxVotos,
+    rodada: estadoVotacao.rodadaAtual
+  };
+  
   // Verificar se ainda há grupos para votar
   const restantes = estadoVotacao.grupos.filter(g => !estadoVotacao.apresentados.includes(g));
   
@@ -105,7 +113,8 @@ app.post('/api/encerrar-rodada', (req, res) => {
     // Todas as apresentações foram definidas
     estadoVotacao.votacaoAtiva = false;
     io.emit('votacaoFinalizada', {
-      apresentados: estadoVotacao.apresentados
+      apresentados: estadoVotacao.apresentados,
+      ultimoVencedor: estadoVotacao.ultimoVencedor
     });
   } else {
     // Iniciar próxima rodada
@@ -115,7 +124,8 @@ app.post('/api/encerrar-rodada', (req, res) => {
       vencedor,
       maxVotos,
       restantes: restantes,
-      rodadaAtual: estadoVotacao.rodadaAtual
+      rodadaAtual: estadoVotacao.rodadaAtual,
+      ultimoVencedor: estadoVotacao.ultimoVencedor
     });
   }
   
@@ -135,7 +145,8 @@ app.post('/api/reiniciar', (req, res) => {
     votos: {},
     totalVotos: 0,
     votacaoAtiva: true,
-    rodadaAtual: 1
+    rodadaAtual: 1,
+    ultimoVencedor: null
   };
   
   inicializarVotosRodada();
