@@ -848,6 +848,60 @@
     });
   });
 
+  // Função para reiniciar a votação
+  async function reiniciarVotacao() {
+    if (!confirm('Tem certeza que deseja reiniciar toda a votação? Isso apagará todos os resultados.')) {
+      return;
+    }
+    try {
+      const response = await fetch('/api/reiniciar', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        }
+      });
+      const data = await response.json();
+      if (data.sucesso) {
+        Toastify({
+          text: '🔄 Votação reiniciada com sucesso!',
+          duration: 4000,
+          gravity: 'top',
+          position: 'center',
+          backgroundColor: '#4CAF50',
+          color: '#fff',
+          fontSize: '18px',
+          fontFamily: "'Orbitron', sans-serif",
+          stopOnFocus: true
+        }).showToast();
+        atualizarInterface(data.estado);
+      } else {
+        Toastify({
+          text: 'Erro ao reiniciar votação',
+          duration: 4000,
+          gravity: 'top',
+          position: 'center',
+          backgroundColor: '#f44336',
+          color: '#fff',
+          fontSize: '18px',
+          fontFamily: "'Orbitron', sans-serif",
+          stopOnFocus: true
+        }).showToast();
+      }
+    } catch (error) {
+      Toastify({
+        text: 'Erro de conexão. Tente novamente.',
+        duration: 4000,
+        gravity: 'top',
+        position: 'center',
+        backgroundColor: '#f44336',
+        color: '#fff',
+        fontSize: '18px',
+        fontFamily: "'Orbitron', sans-serif",
+        stopOnFocus: true
+      }).showToast();
+    }
+  }
+
   // Inicialização
   window.addEventListener('load', () => {
     tentarIniciarMusica();
