@@ -3,6 +3,7 @@ const http = require('http');
 const socketIo = require('socket.io');
 const cors = require('cors');
 const path = require('path');
+const cookieParser = require('cookie-parser');
 
 const app = express();
 const server = http.createServer(app);
@@ -16,6 +17,7 @@ const io = socketIo(server, {
 // Middleware
 app.use(cors());
 app.use(express.json());
+app.use(cookieParser());
 app.use(express.static(path.join(__dirname)));
 
 // Estado global da votação
@@ -29,6 +31,9 @@ let estadoVotacao = {
   ultimoVencedor: null
 };
 
+// Controle de sessões que já votaram na rodada atual
+let sessoesVotaramRodada = new Set();
+
 // Função para inicializar votos da rodada atual
 function inicializarVotosRodada() {
   const restantes = estadoVotacao.grupos.filter(g => !estadoVotacao.apresentados.includes(g));
@@ -37,6 +42,8 @@ function inicializarVotosRodada() {
   restantes.forEach(grupo => {
     estadoVotacao.votos[grupo] = 0;
   });
+  // Limpar registro de sessões que votaram
+  sessoesVotaramRodada.clear();
 }
 
 // Inicializar primeira rodada
@@ -50,6 +57,18 @@ app.get('/api/estado', (req, res) => {
 app.post('/api/votar', (req, res) => {
   const { grupo } = req.body;
   
+  // Gerar ou obter ID de sessão único
+  let sessionId = req.cookies?.sessionId;
+  if (!sessionId) {
+    sessionId = 'session_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+    res.cookie('sessionId', sessionId, { 
+      maxAge: 24 * 60 * 60 * 1000, // 24 horas
+      httpOnly: true,
+      secure: false, // false para desenvolvimento local
+      sameSite: 'strict'
+    });
+  }
+  
   if (!estadoVotacao.votacaoAtiva) {
     return res.status(400).json({ erro: 'Votação encerrada' });
   }
@@ -58,8 +77,16 @@ app.post('/api/votar', (req, res) => {
     return res.status(400).json({ erro: 'Grupo inválido' });
   }
   
+  // Verificar se esta sessão já votou na rodada atual
+  if (sessoesVotaramRodada.has(sessionId)) {
+    return res.status(400).json({ erro: 'Você já votou nesta rodada' });
+  }
+  
   estadoVotacao.votos[grupo]++;
   estadoVotacao.totalVotos++;
+  
+  // Registrar que esta sessão já votou na rodada atual
+  sessoesVotaramRodada.add(sessionId);
   
   // Emitir atualização para todos os clientes
   io.emit('votoRegistrado', {

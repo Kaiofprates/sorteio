@@ -414,6 +414,22 @@
 
   // Funções de votação
   async function registrarVoto(grupo, botao) {
+    // Verificar se o usuário já votou antes de fazer a requisição
+    if (usuarioJaVotou) {
+      Toastify({
+        text: "❌ Você já votou nesta rodada!",
+        duration: 3000,
+        gravity: "top",
+        position: "right",
+        backgroundColor: "#f44336",
+        color: "#fff",
+        fontSize: "16px",
+        fontFamily: "'Orbitron', sans-serif",
+        stopOnFocus: true
+      }).showToast();
+      return;
+    }
+
     try {
       const response = await fetch('/api/votar', {
         method: 'POST',
@@ -431,13 +447,24 @@
           audioClick.play();
         }
         
-        // Desabilitar o botão após o voto
-        if (botao) {
-          botao.disabled = true;
-          botao.textContent = `${grupo} ✓`;
-          botao.style.background = 'linear-gradient(135deg, #4CAF50 0%, #45a049 100%)';
-          botao.style.cursor = 'not-allowed';
-          usuarioJaVotou = true;
+        // Marcar que o usuário já votou
+        usuarioJaVotou = true;
+        
+        // Desabilitar todos os botões de votação
+        const botoesContainer = document.querySelector('.botoes-votacao');
+        if (botoesContainer) {
+          const botoes = botoesContainer.querySelectorAll('.botao-grupo');
+          botoes.forEach(btn => {
+            btn.disabled = true;
+            if (btn.textContent.replace(' ✓', '') === grupo) {
+              btn.textContent = `${grupo} ✓`;
+              btn.style.background = 'linear-gradient(135deg, #4CAF50 0%, #45a049 100%)';
+            } else {
+              btn.style.background = 'linear-gradient(135deg, #666 0%, #555 100%)';
+              btn.style.opacity = '0.6';
+            }
+            btn.style.cursor = 'not-allowed';
+          });
         }
         
         Toastify({
@@ -452,6 +479,23 @@
           stopOnFocus: true
         }).showToast();
       } else {
+        // Se o servidor retornou erro de "já votou", atualizar o estado local
+        if (data.erro && data.erro.includes('já votou')) {
+          usuarioJaVotou = true;
+          
+          // Desabilitar todos os botões
+          const botoesContainer = document.querySelector('.botoes-votacao');
+          if (botoesContainer) {
+            const botoes = botoesContainer.querySelectorAll('.botao-grupo');
+            botoes.forEach(btn => {
+              btn.disabled = true;
+              btn.style.background = 'linear-gradient(135deg, #666 0%, #555 100%)';
+              btn.style.opacity = '0.6';
+              btn.style.cursor = 'not-allowed';
+            });
+          }
+        }
+        
         Toastify({
           text: `❌ Erro: ${data.erro}`,
           duration: 4000,
@@ -642,8 +686,18 @@
         const btn = document.createElement("button");
         btn.textContent = grupo;
         btn.className = "botao-grupo";
-        btn.disabled = false; // Garantir que o botão está habilitado
-        btn.onclick = () => registrarVoto(grupo, btn);
+        
+        // Se o usuário já votou, desabilitar todos os botões
+        if (usuarioJaVotou) {
+          btn.disabled = true;
+          btn.style.background = 'linear-gradient(135deg, #666 0%, #555 100%)';
+          btn.style.opacity = '0.6';
+          btn.style.cursor = 'not-allowed';
+        } else {
+          btn.disabled = false;
+          btn.onclick = () => registrarVoto(grupo, btn);
+        }
+        
         botoesContainer.appendChild(btn);
       });
 
