@@ -18,7 +18,7 @@ const io = socketIo(server, {
 app.use(cors());
 app.use(express.json());
 app.use(cookieParser());
-app.use(express.static(path.join(__dirname)));
+app.use(express.static(path.join(__dirname, '..')));
 
 // Estado global da votação
 let estadoVotacao = {
@@ -231,12 +231,12 @@ io.on('connection', (socket) => {
 
 // Rota para servir o arquivo HTML
 app.get('/', (req, res) => {
-  res.sendFile(path.join(__dirname, 'index.html'));
+  res.sendFile(path.join(__dirname, '..', 'index.html'));
 });
 
 // Rota para o painel administrativo
 app.get('/admin', (req, res) => {
-  res.sendFile(path.join(__dirname, 'admin.html'));
+  res.sendFile(path.join(__dirname, '..', 'admin.html'));
 });
 
 const PORT = process.env.PORT || 3000;
