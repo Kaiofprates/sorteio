@@ -1,122 +1,133 @@
 # 🎭 Sistema de Votação de Apresentações
 
-Sistema de votação em tempo real para escolher a ordem das apresentações dos grupos. Agora com backend centralizado para sincronização entre todos os participantes e painel administrativo separado.
+Sistema completo de votação em tempo real para apresentações, com backend centralizado em Node.js e interface responsiva.
 
 ## ✨ Funcionalidades
 
-- **Votação em tempo real**: Todos os participantes veem os votos atualizados instantaneamente
-- **Sincronização centralizada**: Backend Node.js gerencia todos os votos
-- **Painel administrativo separado**: Interface dedicada para controle da votação
-- **Notificações elegantes**: Toastify para alertas e notificações em tempo real
-- **Interface responsiva**: Design moderno e intuitivo
-- **Música de fundo**: Playlist automática durante a votação
-- **Efeitos sonoros**: Sons para cliques e vencedores
-- **Status de conexão**: Indicador visual de conectividade
+- **Votação em tempo real** com Socket.IO
+- **Controle de sessão** para evitar votos múltiplos
+- **Interface responsiva** otimizada para mobile
+- **Painel administrativo** separado
+- **Tratamento de empates** automático
+- **Notificações elegantes** com Toastify
+- **Música de fundo** opcional
+- **Design futurista** com fonte Orbitron
 
-## 🚀 Como usar
+## 🚀 Deploy na Vercel
 
-### Pré-requisitos
+### 1. Preparação
+Certifique-se de que todos os arquivos estão commitados no Git:
+```bash
+git add .
+git commit -m "feat: preparação para deploy na Vercel"
+git push
+```
 
-- Node.js (versão 14 ou superior)
-- npm ou yarn
+### 2. Deploy Automático
+1. Acesse [vercel.com](https://vercel.com)
+2. Faça login com sua conta GitHub
+3. Clique em "New Project"
+4. Importe o repositório do GitHub
+5. A Vercel detectará automaticamente a configuração do `vercel.json`
+6. Clique em "Deploy"
+
+### 3. Configuração Manual (Alternativo)
+Se preferir usar a CLI da Vercel:
+```bash
+npm i -g vercel
+vercel login
+vercel
+```
+
+## 🛠️ Desenvolvimento Local
 
 ### Instalação
-
-1. Clone ou baixe o projeto
-2. Abra o terminal na pasta do projeto
-3. Instale as dependências:
-
 ```bash
 npm install
 ```
 
-### Executando o projeto
-
-1. Inicie o servidor:
-
+### Execução
 ```bash
 npm start
 ```
 
-2. Para desenvolvimento (com auto-reload):
-
+### Desenvolvimento com auto-reload
 ```bash
 npm run dev
 ```
 
-3. Acesse no navegador:
-   - **Página de votação**: `http://localhost:3000`
-   - **Painel administrativo**: `http://localhost:3000/admin`
+## 📱 URLs de Acesso
 
-## 📱 Como funciona
+- **Página Principal**: `http://localhost:3000`
+- **Painel Admin**: `http://localhost:3000/admin`
 
-### Para os participantes:
-1. Acesse `http://localhost:3000` no navegador
-2. Veja o status de conexão no canto superior direito
-3. Clique no grupo que deseja votar
-4. Acompanhe os votos em tempo real
-5. Aguarde o anúncio do vencedor
-
-### Para o administrador:
-1. Acesse `http://localhost:3000/admin` no navegador
-2. Monitore em tempo real:
-   - Status da votação
-   - Votos da rodada atual
-   - Grupos já apresentados
-   - Total de votos
-3. Use os botões para:
-   - **Encerrar Votação da Rodada**: Finaliza a rodada atual
-   - **Reiniciar Votação Completa**: Reseta todo o sistema
-   - **Abrir Página de Votação**: Abre a página principal em nova aba
-
-## 🔧 Tecnologias utilizadas
-
-- **Frontend**: HTML5, CSS3, JavaScript (ES6+)
-- **Backend**: Node.js, Express.js
-- **Tempo real**: Socket.IO
-- **Notificações**: Toastify.js
-- **Estilização**: CSS customizado com fonte Orbitron
-- **Áudio**: Web Audio API
-
-## 📁 Estrutura do projeto
+## 🏗️ Estrutura do Projeto
 
 ```
 site-lucas/
-├── index.html          # Interface principal de votação
-├── admin.html          # Painel administrativo
-├── server.js           # Servidor backend
-├── package.json        # Dependências e scripts
-├── iniciar.bat         # Script de inicialização (Windows)
-└── README.MD          # Este arquivo
+├── server.js          # Servidor Node.js com Express e Socket.IO
+├── index.html         # Página principal de votação
+├── admin.html         # Painel administrativo
+├── vercel.json        # Configuração para deploy na Vercel
+├── package.json       # Dependências e scripts
+├── .gitignore         # Arquivos ignorados pelo Git
+└── README.md          # Este arquivo
 ```
 
-## 🎵 Músicas incluídas
+## 🔧 Tecnologias Utilizadas
 
-O sistema inclui uma playlist automática com 4 músicas que rodam em loop durante a votação.
+- **Backend**: Node.js, Express, Socket.IO
+- **Frontend**: HTML5, CSS3, JavaScript (Vanilla)
+- **Estilização**: CSS Grid, Flexbox, Media Queries
+- **Notificações**: Toastify.js
+- **Fontes**: Google Fonts (Orbitron)
+- **Deploy**: Vercel
 
-## 🔄 API Endpoints
+## 🎨 Características do Design
 
-- `GET /api/estado` - Retorna o estado atual da votação
-- `POST /api/votar` - Registra um voto para um grupo
-- `POST /api/encerrar-rodada` - Finaliza a rodada atual
-- `POST /api/reiniciar` - Reinicia toda a votação
+- **Responsivo**: Otimizado para desktop, tablet e mobile
+- **Futurista**: Fonte Orbitron e gradientes
+- **Interativo**: Animações e transições suaves
+- **Acessível**: Contraste adequado e navegação por toque
 
-## 🌐 Eventos Socket.IO
+## 🔒 Controle de Votos
 
-- `estadoAtual` - Estado inicial enviado ao conectar
-- `votoRegistrado` - Novo voto registrado
-- `novaRodada` - Início de nova rodada
-- `votacaoFinalizada` - Votação completamente finalizada
-- `votacaoReiniciada` - Votação reiniciada
+- **Por sessão**: Cada navegador tem uma sessão única
+- **Cookies seguros**: httpOnly e sameSite strict
+- **Dupla verificação**: Frontend e backend
+- **Reset automático**: Limpeza em novas rodadas
 
-## 🎨 Personalização
+## 📊 Funcionalidades do Admin
 
-Você pode personalizar:
-- Cores e estilos no CSS
-- Lista de grupos no arquivo `server.js`
-- Músicas de fundo no array `musicas`
-- Sons de efeitos nos elementos `<audio>`
+- **Status em tempo real** da votação
+- **Contagem de votos** por grupo
+- **Lista de apresentados** em ordem
+- **Controles de rodada**: encerrar, reiniciar
+- **Acesso direto** à página de votação
 
-## 📝 Licença
+## 🌐 Configuração de Produção
 
-MIT License - Sinta-se livre para usar e modificar!
+O `vercel.json` está configurado para:
+- Roteamento automático de APIs
+- Suporte a WebSocket via Socket.IO
+- Timeout de 30 segundos para funções
+- Ambiente de produção otimizado
+
+## 📝 Notas Importantes
+
+- O sistema funciona perfeitamente em redes compartilhadas
+- Cada dispositivo tem controle independente de votos
+- Interface adapta-se automaticamente ao tamanho da tela
+- Música de fundo é opcional e pode ser ativada pelo usuário
+
+## 🎯 Próximas Melhorias
+
+- [ ] Persistência de dados em banco
+- [ ] Autenticação para painel admin
+- [ ] Histórico de votações
+- [ ] Exportação de resultados
+- [ ] Temas personalizáveis
+
+---
+
+**Desenvolvido com ❤️ para apresentações especiais!**
